@@ -15,7 +15,7 @@ exports.notFound = (res) => (message) => {
 
 exports.error = (res, status) => (error) => {
     if (error) {
-        res.status(status || 500).json({ error: { message: error.message, stack: error.stack } });
+        res.status(status || 400).json({ error: { message: error.message, stack: error.stack } });
     }
     return null;
 }

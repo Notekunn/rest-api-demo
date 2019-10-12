@@ -12,11 +12,17 @@ exports.show = ({ params: { id } }, res, next) =>
         .catch(() => notFound(res)("Not found user"))
 
 
-exports.create = ({ bodymen: { body } }, res, next) =>
-    User.create(body)
-        //.then((user) => user.view(true))//
-        .then(success(res, 201))
-        .catch((err) => {
-            if (err.name === 'MongoError' && err.code === 11000) error(res, 409)(Error("Email already registered"))
-            else error(res)(err);
-        })
+exports.create = async ({ bodymen: { body } }, res, next) => {
+    try {
+        const { studentCode, password } = body;
+        const isCorrectPassword = await User.checkLogin(studentCode, password);
+        if(!isCorrectPassword) return error(res, 401)(Error("Check authentication credentials!"));
+        const user = await User.create(body);
+        const token = await user.generateAuthToken();
+        success(res, 201)({ user, token });
+    } catch (err) {
+
+        if (err.name === 'MongoError' && err.code === 11000) error(res, 409)(Error("Student already registered"));
+        else error(res)(err);
+    }
+}
