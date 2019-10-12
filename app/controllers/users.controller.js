@@ -12,9 +12,8 @@ exports.show = ({ params: { id } }, res, next) =>
         .then(success(res))
         .catch(() => notFound(res)("Not found user"))
 exports.showMe = async (req, res, next) => {
-    res.send(req.user)
+    success(res)(req.user)
 }
-
 exports.create = async ({ bodymen: { body } }, res, next) => {
     try {
         const { studentCode, password } = body;
@@ -35,8 +34,30 @@ exports.login = async ({ body: { studentCode, password } }, res, next) => {
         const user = await User.findByCredentials(studentCode, password)
         if (!user) return error(res, 401)(Error('Login failed! Check authentication credentials'));
         const token = await user.generateAuthToken()
-        res.send({ user, token })
+        success(res)({ user, token })
     } catch (err) {
         error(res).send(err)
+    }
+}
+
+exports.logout = async (req, res, next) => {
+    try {
+        req.user.tokens = req.user.tokens.filter((token) => {
+            return token.token != req.token
+        })
+        await req.user.save();
+        success(res)({ message: "Logout success!" });
+    } catch (error) {
+        error(res, 500)(Error("Logout error!"));
+    }
+}
+
+exports.logoutAll = async (req, res, next) => {
+    try {
+        req.user.tokens = []
+        await req.user.save();
+        success(res)({ message: "Logout success!" });
+    } catch (error) {
+        error(res, 500)(Error("Logout error!"));
     }
 }
