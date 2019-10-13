@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 const login = require("tin-chi-kma")({});
-const bcrypt = require('bcryptjs');
+// const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { Schema } = mongoose;
 
@@ -36,11 +36,18 @@ const UserSchema = new Schema({
 })
 
 UserSchema.pre('save', async function(next) {
-    const user = this
-    if (user.isModified('password')) {
-        user.password = await bcrypt.hash(user.password, 8)
+    const user = this;
+    const { studentCode, password } = user;
+    const correctPass = await user.checkLogin();
+    if (!correctPass) next(Error("studentCode / password is not correct!"));
+    try {
+        const { displayName } = await user.showInfo();
+        user.className = studentCode.slice(0, 2);
+        user.name = displayName;
+        next();
+    } catch (error) {
+        next(error);
     }
-    next();
 })
 
 UserSchema.methods.generateAuthToken = async function() {
@@ -51,7 +58,8 @@ UserSchema.methods.generateAuthToken = async function() {
     return token;
 }
 
-UserSchema.statics.checkLogin = async (studentCode, password) => {
+UserSchema.methods.checkLogin = async function() {
+    const { studentCode, password } = this;
     try {
         const api = await login({ user: studentCode, pass: password });
         return true;
@@ -59,14 +67,37 @@ UserSchema.statics.checkLogin = async (studentCode, password) => {
         return false;
     }
 }
+UserSchema.methods.login = async function() {
+    const { studentCode, password } = this;
+    const api = await login({ user: studentCode, pass: password });
+    return api
+}
+UserSchema.methods.showInfo = async function() {
+    const api = await this.login();
+    const information = await api.studentProfile.show();
+    return information;
+}
+UserSchema.methods.showSemesters = async function() {
+    const api = await this.login();
+    const semesters = await api.studentTimeTable.showSemesters();
+    if (semesters) return semesters.map(({ name, value }) => ({ name, drpSemester: value }))
+    return semesters;
+}
+
+UserSchema.methods.showTimeTable = async function(drpSemester) {
+    const api = await this.login();
+    const timetable = await api.studentTimeTable.showTimeTable(drpSemester);
+    return timetable;
+}
+
 UserSchema.statics.findByCredentials = async (studentCode, password) => {
     const user = await User.findOne({ studentCode })
-    if (!user) return Promise.reject(Error({ error: 'User is not exist!' }));
-    const correctPass = await User.checkLogin(studentCode, password);
-    const isPasswordMatch = await bcrypt.compare(password, user.password)
-    if(!correctPass) return Promise.reject(Error({ error: 'Password is not correct!' }));
+    if (!user) return Promise.reject(Error('User is not exist!'));
+    const correctPass = await user.checkLogin();
+    const isPasswordMatch = (password === user.password);
+    if (!correctPass) return Promise.reject(Error('Password is not correct!'));
     if (!isPasswordMatch) {
-       user.password = await bcrypt.hash(password, 8)
+        user.password = password;
     }
     await user.save();
     return user;

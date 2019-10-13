@@ -1,5 +1,4 @@
 const User = require("../models/user.model");
-const jwt = require('jsonwebtoken');
 const { success, notFound, error } = require("../services/response")
 exports.index = ({ querymen: { query, select, cursor } }, res, next) =>
     User.find(query, select, cursor)
@@ -16,9 +15,6 @@ exports.showMe = async (req, res, next) => {
 }
 exports.create = async ({ bodymen: { body } }, res, next) => {
     try {
-        const { studentCode, password } = body;
-        const isCorrectPassword = await User.checkLogin(studentCode, password);
-        if (!isCorrectPassword) return error(res, 401)(Error("Check authentication credentials!"));
         const user = await User.create(body);
         const token = await user.generateAuthToken();
         success(res, 201)({ user, token });
@@ -36,7 +32,7 @@ exports.login = async ({ body: { studentCode, password } }, res, next) => {
         const token = await user.generateAuthToken()
         success(res)({ user, token })
     } catch (err) {
-        error(res).send(err)
+        error(res)(err);
     }
 }
 
