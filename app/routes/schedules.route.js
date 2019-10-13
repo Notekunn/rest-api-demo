@@ -1,0 +1,10 @@
+const express = require('express');
+const router = express.Router();
+const { middleware: query } = require("querymen");
+const { middleware: body } = require("bodymen");
+const auth = require("../services/auth");
+const { selectSemester, save } = require("../controllers/schedules.controller");
+// router.get('/', query(), index);
+router.get("/semesters", auth, selectSemester);
+router.post("/save", auth, save);
+module.exports = router;
