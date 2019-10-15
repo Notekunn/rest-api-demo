@@ -13,7 +13,7 @@ exports.selectSemester = async (req, res, next) => {
 
 exports.save = async (req, res, next) => {
     const user = req.user;
-    const drpSemester = req.body.drpSemester.trim() || "";
+    const drpSemester = req.body.drpSemester;
     try {
         const timetable = await Schedule.saveTimeTable(user, drpSemester);
         success(res)(timetable);
@@ -22,10 +22,18 @@ exports.save = async (req, res, next) => {
     }
 }
 
-exports.search = async (req, res, next) => {
+exports.showMe = async (req, res, next) => {
     const { user: studentCode } = req.user;
+    try {
+        const timetable = await Schedule.saveTimeTable(user, drpSemester);
+        success(res)(timetable);
+    } catch (err) {
+        error(res)(err);
+    }
+}
+exports.search = async (req, res, next) => {
+    const studentCode = req.user.studentCode;
     const days = Array.isArray(req.body.days) ? req.body.days : [req.body.days];
-    console.log(days);
     try {
         const schedule = await Schedule.search(studentCode, days);
         success(res)(schedule);
