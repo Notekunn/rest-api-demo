@@ -21,3 +21,15 @@ exports.save = async (req, res, next) => {
         error(res)(err);
     }
 }
+
+exports.search = async (req, res, next) => {
+    const { user: studentCode } = req.user;
+    const days = Array.isArray(req.body.days) ? req.body.days : [req.body.days];
+    console.log(days);
+    try {
+        const schedule = await Schedule.search(studentCode, days);
+        success(res)(schedule);
+    } catch (err) {
+        error(res)(err);
+    }
+}

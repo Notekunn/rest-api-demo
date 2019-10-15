@@ -36,6 +36,27 @@ ScheduleSchema.statics.saveTimeTable = async (user, drpSemester) => {
     const inserted = await Schedule.create(schedule);
     return inserted;
 }
+
+ScheduleSchema.statics.search = async (studentCode, days) => {
+
+    days = days.map(e => {
+        const format = moment(e, "DD/MM/YYYY", TIME_ZONE);
+        if (format.isValid()) return new Date(format.format());
+        return new Date(moment("DD/MM/YYYY", TIME_ZONE).format());
+    })
+    const schedule = await Schedule
+        .find({ day: { $in: days } });
+
+    return schedule.sort((a, b) => {
+        const dayA = moment(a.day);
+        const dayB = moment(b.day);
+        if (dayB.isBefore(dayA)) return true;
+        if (dayA.isBefore(dayB)) return false;
+        const [lessonA] = a.lesson.split(',');
+        const [lessonB] = b.lesson.split(',');
+        return parseInt(lessonA) > parseInt(lessonB);
+    })
+}
 const Schedule = mongoose.model('schedule', ScheduleSchema);
 
 module.exports = Schedule;
