@@ -23,10 +23,10 @@ exports.save = async (req, res, next) => {
 }
 
 exports.showMe = async (req, res, next) => {
-    const { user: studentCode } = req.user;
+    const { studentCode } = req.user;
     try {
-        const timetable = await Schedule.saveTimeTable(user, drpSemester);
-        success(res)(timetable);
+        const schedule = await Schedule.find({ studentCode });
+        success(res)(schedule);
     } catch (err) {
         error(res)(err);
     }
