@@ -1,6 +1,5 @@
 const mongoose = require("mongoose");
 const login = require("tin-chi-kma")({});
-// const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { Schema } = mongoose;
 

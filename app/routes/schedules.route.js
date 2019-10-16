@@ -1,7 +1,5 @@
 const express = require('express');
 const router = express.Router();
-const { middleware: query } = require("querymen");
-const { middleware: body } = require("bodymen");
 const auth = require("../services/auth");
 const { selectSemester, save, search, showMe } = require("../controllers/schedules.controller");
 router.get('/me', auth, showMe);

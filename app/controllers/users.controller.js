@@ -1,9 +1,25 @@
 const User = require("../models/user.model");
 const { success, notFound, error } = require("../services/response")
-exports.index = ({ querymen: { query, select, cursor } }, res, next) =>
-    User.find(query, select, cursor)
-        .then(success(res))
-        .catch(next)
+exports.index = async ({ query: { query = {}, max, cursor } }, res, next) => {
+    if (!parseInt(max, 10) || parseInt(max, 10) <= 0) {
+        max = 1000;
+        cursor = 1;
+    }
+    else {
+        max = parseInt(max, 10);
+        cursor = parseInt(cursor, 10) || 1;
+    }
+    try {
+        const users = await User
+            .find(query, { studentCode: 1, name: 1, _id: 0, className: 1 })
+            .limit(max)
+            .skip(max * cursor - max);
+        success(res)(users);
+    } catch (err) {
+        error(res)(err)
+    }
+}
+
 
 
 exports.show = ({ params: { id } }, res, next) =>
@@ -13,9 +29,9 @@ exports.show = ({ params: { id } }, res, next) =>
 exports.showMe = async (req, res, next) => {
     success(res)(req.user)
 }
-exports.create = async ({ bodymen: { body } }, res, next) => {
+exports.create = async ({ body: { studentCode, password } }, res, next) => {
     try {
-        const user = await User.create(body);
+        const user = await User.create({ studentCode, password });
         const token = await user.generateAuthToken();
         success(res, 201)({ user, token });
     } catch (err) {
