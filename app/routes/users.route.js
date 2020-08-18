@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const auth = require("../services/auth");
-const { index, show, create, login, showMe, logout, logoutAll} = require("../controllers/users.controller");
+const { index, show, create, login, showMe, logout, logoutAll } = require("../controllers/users.controller");
 router.get('/', index);
 router.post('/', create);
 router.post('/login', login);

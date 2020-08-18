@@ -18,7 +18,7 @@ const ScheduleSchema = new Schema({
     lesson: String,
     room: String
 })
-ScheduleSchema.pre("save", async function(next) {
+ScheduleSchema.pre("save", async function (next) {
     const { studentCode, day, lesson, subjectCode } = this;
     const existSchedule = await Schedule.find({ studentCode, day, lesson, subjectCode });
     if (existSchedule && existSchedule.length != 0) next(Error("Schedule is exits."));
